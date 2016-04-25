@@ -55,20 +55,8 @@
 #include "command_handler.hpp"
 
 
-/**
- * The main() creates tasks or "threads".  See the documentation of scheduler_task class at scheduler_task.hpp
- * for details.  There is a very simple example towards the beginning of this class's declaration.
- *
- * @warning SPI #1 bus usage notes (interfaced to SD & Flash):
- *      - You can read/write files from multiple tasks because it automatically goes through SPI semaphore.
- *      - If you are going to use the SPI Bus in a FreeRTOS task, you need to use the API at L4_IO/fat/spi_sem.h
- *
- * @warning SPI #0 usage notes (Nordic wireless)
- *      - This bus is more tricky to use because if FreeRTOS is not running, the RIT interrupt may use the bus.
- *      - If FreeRTOS is running, then wireless task may use it.
- *        In either case, you should avoid using this bus or interfacing to external components because
- *        there is no semaphore configured for this bus and it should be used exclusively by nordic wireless.
- */
+QueueHandle_t qh = 0;
+
 class StepperMotor : public scheduler_task
 {
     public:
@@ -78,59 +66,6 @@ class StepperMotor : public scheduler_task
     }
     bool init(void)
     {
-        uint32_t baud =38400;
-        uint8_t dll;
-        //powering up UART3
-        LPC_SC->PCONP |= (1 << 25);
-
-        //PCLKSEL for UART3
-        LPC_SC->PCLKSEL1 &= ~(3 << 18);
-        LPC_SC->PCLKSEL1 |= (1 << 18);
-
-        //TXD3
-        LPC_PINCON->PINSEL0 &= ~(3 << 0);
-        LPC_PINCON->PINSEL0 |= (2 << 0);
-
-        //RXD3
-        LPC_PINCON->PINSEL0 &= ~(3 << 2);
-        LPC_PINCON->PINSEL0 |= (2 << 2);
-
-        //dll value
-
-        dll = sys_get_cpu_clock()/(16 * baud);
-        LPC_UART3->LCR = (1<<7);
-        LPC_UART3->DLL = dll;
-        LPC_UART3->DLM = 0;
-        LPC_UART3->LCR = 0x03;
-    }
-    char uart2_putchar(char out)
-    {
-        LPC_UART3->THR = out;
-        while(!(LPC_UART3->LSR & (1 << 6)));
-        return 1;
-    }
-    char uart2_getchar(void)
-    {
-        while(LPC_UART3->LSR & (1 << 0))
-        {
-            break;
-        }
-        char c = LPC_UART3->RBR;
-        return c;
-    }
-    bool run(void *p)
-    {
-
-        //Here is the start of the UART portion
-        char a = 'F';
-        char b;
-        printf("Receiving!\n");
-        uart2_putchar(a);
-
-        b=uart2_getchar();
-        vTaskDelay(1000);
-        printf("The b char is: %c \n",b);
-        //Here is the end of the UART portion
 
 
         LPC_PINCON->PINSEL2 &= ~((1<<0)|(1<<1));
@@ -148,6 +83,125 @@ class StepperMotor : public scheduler_task
         BIT(LPC_GPIO2->FIOPIN).b3 = 0;
         BIT(LPC_GPIO2->FIOPIN).b4 = 0;
         BIT(LPC_GPIO2->FIOPIN).b5 = 0;
+        return true;
+    }
+    bool run(void *p)
+    {
+        int steps = 0;
+        if (xQueueReceive(qh,&steps,portMAX_DELAY) ){
+            for (int i = 0 ; i < steps ; i++){
+                //do one step by changing voltages here
+            }
+        }
+        return true;
+    }
+    private:
+
+};
+
+class BluetoothTask : public scheduler_task
+{
+    public:
+      BluetoothTask (uint8_t priority) : scheduler_task("watchdog", 2048, priority)
+    {
+              /* Nothing to init */
+    }
+    bool init(void)
+    {
+        //previous initialized variables
+        //uint32_t baud =38400;
+        // uint8_t dll;
+
+
+        //powering up UART2
+        LPC_SC->PCONP |= (1 << 24);
+
+
+        //PCLKSEL for UART2 and 18+19(whatever that is!)
+
+        LPC_SC->PCLKSEL1 &= ~(3 << 16);
+        LPC_SC->PCLKSEL1 &= ~(3 << 18);
+        LPC_SC->PCLKSEL1 |= (1 << 16);
+        LPC_SC->PCLKSEL1 |= (1 << 18);
+
+
+        //PinSelect UART2  2.8 , 2.9
+        LPC_PINCON->PINSEL4 &= ~(0xF << 16); // Clear values
+        LPC_PINCON->PINSEL4 |= (0xA << 16); // Set values for UART2 Rx/Tx
+
+        //dll value, New settings for bluetooth 4/24
+        //CLK is 48mhz, Desired baudrate = 9600 for bluetooth
+        //UArt BaudRate = ( PCLK / 16 * DLL)
+        // DLL = CLK / (16 * baudrate)
+
+        uint16_t DL = (48000000 / (16 * 9600)); // Change baudrate to bleutooth
+
+
+        LPC_UART3->LCR = (1<<7);
+
+        LPC_UART2->DLM = DL >> 8; //upper 8 bits of DL
+        LPC_UART2->DLL = DL; //lower 8 bits of DL
+        LPC_UART2->LCR = 3; //Allows for 8 Bit Data & Disables DLAB
+
+        // Here are the previous settings
+        //dll = sys_get_cpu_clock()/(16 * baud);
+        //LPC_UART3->DLL = dll;
+        //LPC_UART3->DLM = 0;
+        //LPC_UART3->LCR = 0x03;
+
+        qh = xQueueCreate( 1 , sizeof(int)); // Creates Queue of Size 1
+
+        return true;
+    }
+    char uart2_putchar(char out)
+    {
+        LPC_UART2->THR = out;
+        while(!(LPC_UART3->LSR & (1 << 5)));
+        return 1;
+    }
+    char uart2_getchar(void)
+    {
+        while(LPC_UART2->LSR & (1 << 0))
+        {
+            break;
+        }
+        char c = LPC_UART2->RBR;
+        return c;
+    }
+    bool run(void *p)
+    {
+
+        char receive;
+        int steps = 0;
+
+        receive = uart2_getchar(); //wait for data from app
+
+        if (receive == 'A'){ // 1 Step
+            steps = 1;
+        }
+        else if (receive == 'B'){ // 5 Steps
+            steps = 5;
+        }
+        else if (receive == 'C'){ // 25 Steps
+            steps = 25;
+        }
+        else if (receive == 'D'){ // 125 Steps
+            steps = 125;
+        }
+        else if (receive == 'E'){ // 500 Steps
+            steps = 500;
+        }
+        else if (receive == 'F'){ // 2500 Steps
+            steps = 2500;
+        }
+        else{
+            steps = 0;
+        }
+
+        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+
+        //decode message = how many steps on motor
+        //send amount of steps to motor 0 256 steps
         return true;
     }
     private:
@@ -175,6 +229,8 @@ int main(void)
 
     //these are the tasks I can run using my classes.
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
+    scheduler_add_task(new StepperMotor(PRIORITY_MEDIUM));
+    scheduler_add_task(new BluetoothTask(PRIORITY_LOW));
     /* Consumes very little CPU, but need highest priority to handle mesh network ACKs */
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
