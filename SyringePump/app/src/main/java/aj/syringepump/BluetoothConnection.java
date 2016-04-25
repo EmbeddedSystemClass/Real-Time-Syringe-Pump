@@ -33,9 +33,10 @@ public class BluetoothConnection extends AppCompatActivity {
     BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter();
 
     ConnectThread myThreadConnect;
-    ConnectedThread myThreadConnected;
+    public static ConnectedThread myThreadConnected = null;
 
     String status;
+    boolean success;
 
     private UUID MY_UUID;
 
@@ -75,6 +76,7 @@ public class BluetoothConnection extends AppCompatActivity {
         devices = (ListView) findViewById(R.id.listViewBluetooth);
 
         MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
     }
 
     public void getListOfBluetoothDevices() {
@@ -97,8 +99,6 @@ public class BluetoothConnection extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 if (devices.getItemAtPosition(position).equals("HC-06")) {
-                    Intent gotoMenu = new Intent(getApplicationContext(), Menu.class);
-                    startActivity(gotoMenu);
 
                     myThreadConnect = new ConnectThread(pairedDeviceArrayList.get(position));
                     myThreadConnect.start();
@@ -127,7 +127,7 @@ public class BluetoothConnection extends AppCompatActivity {
                 getListOfBluetoothDevices();
             }else{
                 Toast.makeText(this,
-                        "BlueTooth NOT enabled",
+                        "Bluetooth NOT enabled",
                         Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -146,16 +146,16 @@ public class BluetoothConnection extends AppCompatActivity {
         private final BluetoothDevice mmDevice;
 
         private ConnectThread(BluetoothDevice device) {
-            BluetoothSocket tmp = null;
+            //BluetoothSocket tmp = null;
             mmDevice = device;
 
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
-                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+                mmSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
+                e.printStackTrace();
             }
-            mmSocket = tmp;
         }
 
         @Override
@@ -163,20 +163,41 @@ public class BluetoothConnection extends AppCompatActivity {
             // Cancel discovery because it will slow down the connection
             //bluetooth.cancelDiscovery();
 
+            success = false;
+
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
+                success = true;
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
+
                 try {
                     mmSocket.close();
-                } catch (IOException closeException) { }
+
+                } catch (IOException closeException) {
+                    closeException.printStackTrace();
+                }
                 return;
             }
 
             // Do work to manage the connection (in a separate thread)
-            manageConnectedSocket(mmSocket);
+
+            if(success)
+            {
+                manageConnectedSocket(mmSocket);
+                Intent gotoMenu = new Intent(getApplicationContext(), Menu.class);
+                startActivity(gotoMenu);
+            }
+
+            else
+            {
+                Toast toast = Toast.makeText(getApplicationContext(), "Connection failed", Toast.LENGTH_LONG);
+                toast.show();
+            }
+
+
         }
 
         /** Will cancel an in-progress connection, and close the socket */
@@ -188,10 +209,10 @@ public class BluetoothConnection extends AppCompatActivity {
 
     }
 
-    private class ConnectedThread extends Thread {
+    public class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
+        public final OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothSocket socket) {
             mmSocket = socket;
@@ -203,6 +224,7 @@ public class BluetoothConnection extends AppCompatActivity {
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
+
             } catch (IOException e) { }
 
             mmInStream = tmpIn;
@@ -231,7 +253,9 @@ public class BluetoothConnection extends AppCompatActivity {
         public void write(byte[] bytes) {
             try {
                 mmOutStream.write(bytes);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         /* Call this from the main activity to shutdown the connection */
