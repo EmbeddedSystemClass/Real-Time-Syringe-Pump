@@ -1,46 +1,3 @@
-/*
- /*
- *     SocialLedge.com - Copyright (C) 2013
- *
- *     This file is part of free software framework for embedded processors.
- *     You can use it and/or distribute it as long as this copyright header
- *     remains unmodified.  The code is free for personal use and requires
- *     permission to use in a commercial product.
- *
- *      THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
- *      OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
- *      MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
- *      I SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
- *      CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
- *     You can reach the author of this software at :
- *          p r e e t . w i k i @ g m a i l . c o m
- */
-/*
- *     SocialLedge.com - Copyright (C) 2013
- *
- *     This file is part of free software framework for embedded processors.
- *     You can use it and/or distribute it as long as this copyright header
- *     remains unmodified.  The code is free for personal use and requires
- *     permission to use in a commercial product.
- *
- *      THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
- *      OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
- *      MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
- *      I SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
- *      CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
- *     You can reach the author of this software at :
- *          p r e e t . w i k i @ g m a i l . c o m
- */
-
-/**
- * @file
- * @brief This is the application entry point.
- *          FreeRTOS and stdio printf is pre-configured to use uart0_min.h before main() enters.
- *          @see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
- *
- */
 #include <stdio.h>
 #include "LPC17xx.h"
 #include "tasks.hpp"
@@ -66,33 +23,45 @@ class StepperMotor : public scheduler_task
     }
     bool init(void)
     {
+        // Set Pins p2.0 - p2.7 To 00 for GPIO Function
+        LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 MotorStep
+        LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 MotorDir
+        LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2
+        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3
+        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4
+        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5
+        LPC_PINCON->PINSEL4 &= ~((1<<12)|(1<<13)); // 2.6
+        LPC_PINCON->PINSEL4 &= ~((1<<14)|(1<<15)); // 2.7
 
-
-        LPC_PINCON->PINSEL2 &= ~((1<<0)|(1<<1));
-        LPC_PINCON->PINSEL2 &= ~((1<<2)|(1<<3));
-        LPC_PINCON->PINSEL2 &= ~((1<<4)|(1<<5));
-        LPC_PINCON->PINSEL2 &= ~((1<<6)|(1<<7));
-        LPC_PINCON->PINSEL2 &= ~((1<<8)|(1<<9));
-        LPC_PINCON->PINSEL2 &= ~((1<<10)|(1<<11));
-
-        //LPC_GPIO2-> FIODIR |= (1 << 6);
-
-        BIT(LPC_GPIO2->FIOPIN).b0 = 0;
-        BIT(LPC_GPIO2->FIOPIN).b1 = 0;
-        BIT(LPC_GPIO2->FIOPIN).b2 = 0;
-        BIT(LPC_GPIO2->FIOPIN).b3 = 0;
-        BIT(LPC_GPIO2->FIOPIN).b4 = 0;
-        BIT(LPC_GPIO2->FIOPIN).b5 = 0;
+        /* Set p2.0 - p2.7 to outputs (1) */
+        LPC_GPIO2->FIODIR |= (1 << 0);
+        LPC_GPIO2->FIODIR |= (1 << 1);
+        LPC_GPIO2->FIODIR |= (1 << 2);
+        LPC_GPIO2->FIODIR |= (1 << 3);
+        LPC_GPIO2->FIODIR |= (1 << 4);
+        LPC_GPIO2->FIODIR |= (1 << 5);
+        LPC_GPIO2->FIODIR |= (1 << 6);
+        LPC_GPIO2->FIODIR |= (1 << 7);
         return true;
     }
     bool run(void *p)
     {
         int steps = 0;
-        if (xQueueReceive(qh,&steps,portMAX_DELAY) ){
+        if (xQueueReceive(qh,&steps,portMAX_DELAY) ){ //Waits for a message
             for (int i = 0 ; i < steps ; i++){
                 //do one step by changing voltages here
+                LPC_GPIO2->FIOSET = (1 << 0); // Output High to 2.0 MotorStep
+                vTaskDelay(.03); // Sleep 30microSeconds
+                LPC_GPIO2->FIOCLR = (1 << 0); // Output Low to 2.0 MotorStep
+                vTaskDelay(.03); // Sleep 30microSeconds
             }
         }
+
+        /*
+        Return to starting position of stepper for next use?
+        */
+
+        // put "Z" = DONE on UART line so android device is able to send more requests
         return true;
     }
     private:
@@ -108,126 +77,88 @@ class BluetoothTask : public scheduler_task
     }
     bool init(void)
     {
-        //previous initialized variables
-        //uint32_t baud =38400;
-        // uint8_t dll;
+        LPC_SC->PCONP |= (1 << 25); // Power Enable UART3
 
+        //Enable UART3 PCLK
+        LPC_SC->PCLKSEL1 &= ~(3 << 18); // Clear Values for UART 3 Clock
+        LPC_SC->PCLKSEL1 |= (1 << 18); // Peripheral Clock
 
-        //powering up UART2
-        LPC_SC->PCONP |= (1 << 24);
+        //Enable DLAB
+        LPC_UART3->LCR |= (1 << 7);
 
+        //Sets to 9600 baudrate to match bluetooth
+        uint16_t DL = sys_get_cpu_clock()/(9600 * 16);
+        LPC_UART3->DLM = DL >> 8;
+        LPC_UART3->DLL = DL;
 
-        //PCLKSEL for UART2 and 18+19(whatever that is!)
+        LPC_PINCON->PINSEL0 &= ~(3 << 0); // Resets Value for pin 0.0
+        LPC_PINCON->PINSEL0 &= ~(3 << 2); // Resets Value for pin 0.1
 
-        LPC_SC->PCLKSEL1 &= ~(3 << 16);
-        LPC_SC->PCLKSEL1 &= ~(3 << 18);
-        LPC_SC->PCLKSEL1 |= (1 << 16);
-        LPC_SC->PCLKSEL1 |= (1 << 18);
+        LPC_PINCON->PINSEL0 != (2 << 0); // Sets 0.0 to 10 for TXD3
+        LPC_PINCON->PINSEL0 != (2 << 2); // Sets 0.1 to 10 for RXD3
 
-
-        //PinSelect UART2  2.8 , 2.9
-        LPC_PINCON->PINSEL4 &= ~(0xF << 16); // Clear values
-        LPC_PINCON->PINSEL4 |= (0xA << 16); // Set values for UART2 Rx/Tx
-
-        //dll value, New settings for bluetooth 4/24
-        //CLK is 48mhz, Desired baudrate = 9600 for bluetooth
-        //UArt BaudRate = ( PCLK / 16 * DLL)
-        // DLL = CLK / (16 * baudrate)
-
-        uint16_t DL = (48000000 / (16 * 9600)); // Change baudrate to bleutooth
-
-
-        LPC_UART3->LCR = (1<<7);
-
-        LPC_UART2->DLM = DL >> 8; //upper 8 bits of DL
-        LPC_UART2->DLL = DL; //lower 8 bits of DL
-        LPC_UART2->LCR = 3; //Allows for 8 Bit Data & Disables DLAB
-
-        // Here are the previous settings
-        //dll = sys_get_cpu_clock()/(16 * baud);
-        //LPC_UART3->DLL = dll;
-        //LPC_UART3->DLM = 0;
-        //LPC_UART3->LCR = 0x03;
+        LPC_UART3->LCR = 3; //8-bit data and Disabled DLAB
 
         qh = xQueueCreate( 1 , sizeof(int)); // Creates Queue of Size 1
 
         return true;
     }
-    char uart2_putchar(char out)
+
+    char uart3_getchar(void){
+        while(!(LPC_UART3->LSR & (1 << 0))); // wait for FIFO to not be empty
+        char c = LPC_UART3->RBR;
+        return c;
+    }
+
+    char uart3_putchar(char out)
     {
-        LPC_UART2->THR = out;
+        LPC_UART3->THR = out;
         while(!(LPC_UART3->LSR & (1 << 5)));
         return 1;
     }
-    char uart2_getchar(void)
-    {
-        while(LPC_UART2->LSR & (1 << 0))
-        {
-            break;
-        }
-        char c = LPC_UART2->RBR;
-        return c;
-    }
+
     bool run(void *p)
     {
-
-        char receive;
-        int steps = 0;
-
-        receive = uart2_getchar(); //wait for data from app
-
-        if (receive == 'A'){ // 1 Step
-            steps = 1;
-        }
-        else if (receive == 'B'){ // 5 Steps
-            steps = 5;
-        }
-        else if (receive == 'C'){ // 25 Steps
-            steps = 25;
-        }
-        else if (receive == 'D'){ // 125 Steps
-            steps = 125;
-        }
-        else if (receive == 'E'){ // 500 Steps
-            steps = 500;
-        }
-        else if (receive == 'F'){ // 2500 Steps
-            steps = 2500;
-        }
-        else{
-            steps = 0;
-        }
-
-        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+        int steps;
+        char ch = uart3_getchar(); // Sleeps Till FIFO Not Empty
 
         //decode message = how many steps on motor
-        //send amount of steps to motor 0 256 steps
+        switch(ch){
+            case 'a':
+                steps = 1;
+                u0_dbg_printf("%i steps\n", steps);  // Translate data a as 1 step
+                break;
+            case 'b':
+                steps = 10;
+                u0_dbg_printf("%i steps\n", steps); // Translate data b as 10 step
+                break;
+            case 'c':
+                steps = 100;
+                u0_dbg_printf("%i steps\n", steps); // Translate data c as 100 step
+                break;
+            case 'd':
+                steps = 1000;
+                u0_dbg_printf("%i steps\n", steps); // Translate data d as 100 step
+                break;
+            default:
+                //Error
+                break;
+        }
+
+        //Will basically discard values received from UART3 if not lowercase a,b,c,d
+        if (steps == 1 || steps == 10 || steps == 100 || steps == 1000){
+        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+        }
+
         return true;
     }
     private:
 
 };
-/* At terminal.cpp, add the following code at the taskEntry() function */
 
-/* ----------------------------------------------
- * Your source file, such as "my_source.cpp"
- * We will add our command handler function here
- */
+
 int main(void)
 {
-    /**
-     * A few basic tasks for this bare-bone system :
-     *      1.  Terminal task provides gateway to interact with the board through UART terminal.
-     *      2.  Remote task allows you to use remote control to interact with the board.
-     *      3.  Wireless task responsible to receive, retry, and handle mesh network.
-     *
-     * Disable remote task if you are not using it.  Also, it needs SYS_CFG_ENABLE_TLM
-     * such that it can save remote control codes to non-volatile memory.  IR remote
-     * control codes can be learned by typing the "learn" terminal command.
-     */
-
-
-    //these are the tasks I can run using my classes.
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     scheduler_add_task(new StepperMotor(PRIORITY_MEDIUM));
     scheduler_add_task(new BluetoothTask(PRIORITY_LOW));
