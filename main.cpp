@@ -25,39 +25,61 @@ class StepperMotor : public scheduler_task
     {
         // Set Pins p2.0 - p2.7 To 00 for GPIO Function
         // Can also just do LPC_PINCON->PINSEL4 &= ~FF;
-        LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 MotorStep
-        LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 MotorDir
-        LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2
-        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3
-        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4
-        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5
-        LPC_PINCON->PINSEL4 &= ~((1<<12)|(1<<13)); // 2.6
-        LPC_PINCON->PINSEL4 &= ~((1<<14)|(1<<15)); // 2.7
+        LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 Enable
+        LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 Step
+        LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2 MS1
+        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 MS2
+        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 MS3
+        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 RESET
+        LPC_PINCON->PINSEL4 &= ~((1<<12)|(1<<13)); // 2.6 DIR
+        LPC_PINCON->PINSEL4 &= ~((1<<14)|(1<<15)); // 2.7 SLEEP
 
         /* Set p2.0 - p2.7 to outputs (1) */
         // Can also just do LPC_GPIO2->FIODIR |= FF; Here (same thing) i believe;
         LPC_GPIO2->FIODIR |= (1 << 0);
-        LPC_GPIO2->FIODIR |= (1 << 1);
         LPC_GPIO2->FIODIR |= (1 << 2);
-        LPC_GPIO2->FIODIR |= (1 << 3);
         LPC_GPIO2->FIODIR |= (1 << 4);
-        LPC_GPIO2->FIODIR |= (1 << 5);
         LPC_GPIO2->FIODIR |= (1 << 6);
-        LPC_GPIO2->FIODIR |= (1 << 7);
+        LPC_GPIO2->FIODIR |= (1 << 8);
+        LPC_GPIO2->FIODIR |= (1 << 10);
+        LPC_GPIO2->FIODIR |= (1 << 12);
+        LPC_GPIO2->FIODIR |= (1 << 14);
         return true;
     }
     bool run(void *p)
     {
         int steps = 0;
-        if (xQueueReceive(qh,&steps,portMAX_DELAY) ){ //Waits for a message
-            for (int i = 0 ; i < steps ; i++){
-                //do one step by changing voltages here
-                LPC_GPIO2->FIOSET = (1 << 0); // Output High to 2.0 MotorStep
-                vTaskDelay(.03); // Sleep 30microSeconds
-                LPC_GPIO2->FIOCLR = (1 << 0); // Output Low to 2.0 MotorStep
-                vTaskDelay(.03); // Sleep 30microSeconds
+        int a1,a2,a3;
+
+        BIT(LPC_GPIO2->FIOPIN).b11_10 = 1;
+
+        //Waits for a message
+        if (xQueueReceive(qh,&steps,portMAX_DELAY) )
+        {
+
+            a1 = (steps/16);
+            a2 = (steps - (a1*16))/8;
+            a3 = (steps - (a1*16) - (a2*8))/4;
+
+            BIT(LPC_GPIO2->FIOPIN).b3_2 = 1;
+            BIT(LPC_GPIO2->FIOPIN).b1_0 = 1;
+            BIT(LPC_GPIO2->FIOPIN).b13_12 = 1;
+
+            for(int b = 0; b < a1;b++)
+            {
+                BIT(LPC_GPIO2->FIOPIN).b9_8 = 1;
+            }
+            for(int c = 0; c <a2; c++)
+            {
+                BIT(LPC_GPIO2->FIOPIN).b7_6 = 1;
+            }
+            for(int c = 0; c <a3; c++)
+            {
+               BIT(LPC_GPIO2->FIOPIN).b5_4 = 1;
             }
         }
+        BIT(LPC_GPIO2->FIOPIN).b15_14 = 1;
+
 
         /*
         Return to starting position of stepper for next use?
