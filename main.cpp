@@ -24,6 +24,7 @@ class StepperMotor : public scheduler_task
     bool init(void)
     {
         // Set Pins p2.0 - p2.7 To 00 for GPIO Function
+        // Can also just do LPC_PINCON->PINSEL4 &= ~FF;
         LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 MotorStep
         LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 MotorDir
         LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2
@@ -34,6 +35,7 @@ class StepperMotor : public scheduler_task
         LPC_PINCON->PINSEL4 &= ~((1<<14)|(1<<15)); // 2.7
 
         /* Set p2.0 - p2.7 to outputs (1) */
+        // Can also just do LPC_GPIO2->FIODIR |= FF; Here (same thing) i believe;
         LPC_GPIO2->FIODIR |= (1 << 0);
         LPC_GPIO2->FIODIR |= (1 << 1);
         LPC_GPIO2->FIODIR |= (1 << 2);
