@@ -49,34 +49,27 @@ class StepperMotor : public scheduler_task
     bool run(void *p)
     {
         int steps = 0;
-        int a1,a2,a3;
+
 
         BIT(LPC_GPIO2->FIOPIN).b11_10 = 1;
 
         //Waits for a message
-        if (xQueueReceive(qh,&steps,portMAX_DELAY) )
+        if (xQueueReceive(qh,&steps,portMAX_DELAY))
         {
 
-            a1 = (steps/16);
-            a2 = (steps - (a1*16))/8;
-            a3 = (steps - (a1*16) - (a2*8))/4;
+            u0_dbg_printf("We have %i steps from the queue receive\n", steps);
 
             BIT(LPC_GPIO2->FIOPIN).b3_2 = 1;
             BIT(LPC_GPIO2->FIOPIN).b1_0 = 1;
             BIT(LPC_GPIO2->FIOPIN).b13_12 = 1;
 
-            for(int b = 0; b < a1;b++)
+            for(int b = 0; b < steps;b++)
             {
-                BIT(LPC_GPIO2->FIOPIN).b9_8 = 1;
+                BIT(LPC_GPIO2->FIOPIN).b9_8 = 0;
+                BIT(LPC_GPIO2->FIOPIN).b7_6 = 0;
+                BIT(LPC_GPIO2->FIOPIN).b5_4 = 0;
             }
-            for(int c = 0; c <a2; c++)
-            {
-                BIT(LPC_GPIO2->FIOPIN).b7_6 = 1;
-            }
-            for(int c = 0; c <a3; c++)
-            {
-               BIT(LPC_GPIO2->FIOPIN).b5_4 = 1;
-            }
+
         }
         BIT(LPC_GPIO2->FIOPIN).b15_14 = 1;
 
