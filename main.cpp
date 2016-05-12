@@ -12,17 +12,21 @@
 #include "command_handler.hpp"
 
 //Calculate how many steps per ml of liquid
-#define SYRINGE_VOL_ML 30.0 // How much liquid our syringe holds
-#define SYRINGE_BARREL_LEN_MM 50.0 // Placeholder
+#define SYRINGE_VOL_ML 30.0 // How much liquid our syringe holds in ML
+#define SYRINGE_BARREL_LEN_MM 50.0 // Length of SYringe Barrel in MM
 
-#define THREADED_ROD_PITCH 1.25 //
-#define STEPS_PER_REVOLUTION 200.0 //
-#define MICROSTEPS_PER_STEP 16.0 //
+#define T_ROD_PITCH_MM 1.25 // 1.25mm Pitch of Threaded Rod
+#define STEPS_PER_REV 200.0 // Number of Steps to make a revolution
+#define USTEPS_PER_STEP 16.0 // 16 microsteps = 1 step
 
-long ustepsPerML = (MICROSTEPS_PER_STEP * STEPS_PER_REVOLUTION * SYRINGE_BARREL_LEN_MM) / (SYRINGE_VOL_ML * THREADED_ROD_PITCH );
-//End Calc
+//How many steps it takes to dispense one mL
+long stepsPerML = (USTEPS_PER_STEP * STEPS_PER_REV * SYRINGE_BARREL_LEN_MM) / (SYRINGE_VOL_ML * T_ROD_PITCH_MM );
 
-QueueHandle_t qh = 0;
+
+//Queue to start stepper motor task
+QueueHandle_t startStep = 0;
+//Semaphore to prevent input while running
+//SemaphoreHandle_t appLock = xSemaphoreCreateMutex();
 
 class StepperMotor : public scheduler_task
 {
@@ -57,15 +61,21 @@ class StepperMotor : public scheduler_task
         LPC_GPIO2->FIOCLR = (1<<4); // 2.4 ms3 low
         LPC_GPIO2->FIOCLR = (1<<5); // 2.5 enable low - allows motor control
 
-
-
         return true;
     }
+
+    char uart3_putchar(char out)
+    {
+        LPC_UART3->THR = out;
+        while(!(LPC_UART3->LSR & (1 << 5)));
+        return 1;
+    }
+
     bool run(void *p)
     {
         int steps = 0;
 
-        if (xQueueReceive(qh,&steps,portMAX_DELAY))
+        if (xQueueReceive(startStep,&steps,portMAX_DELAY))
         {
             u0_dbg_printf("We have %i steps from the queue receive\n", steps);
 
@@ -90,13 +100,12 @@ class StepperMotor : public scheduler_task
             LPC_GPIO2->FIOCLR = (1<<0); // Set direction back to outward for next use;
         }
         u0_dbg_printf("Done\n");
-        //vTaskDelay(5000);
+
+        uart3_putchar('y'); // Sends "DONE" signal to app
 
         /*
         Return to starting position of stepper for next use?
         */
-
-        // put "Z" = DONE on UART line so android device is able to send more requests
         return true;
     }
     private:
@@ -132,7 +141,7 @@ class BluetoothTask : public scheduler_task
 
         BIT(LPC_UART3->LCR).b7 = 0; // Disable DLAB
 
-        qh = xQueueCreate( 1 , sizeof(int)); // Creates Queue of Size 1
+        startStep = xQueueCreate( 1 , sizeof(int)); // Creates Queue of Size 1
 
         return true;
     }
@@ -154,48 +163,54 @@ class BluetoothTask : public scheduler_task
     {
 
         double mlLiquid = 0;
-        char ch = 0;
-        int steps;
+        char ch, ignoreChar;
+        int steps = 0;
+        bool done = false;
 
-        while (ch != 'z'){ // add liquid until end 'z' signal
-            ch = uart3_getchar(); // grabs byte
-            if (ch == 'a'){ // start signal
-                mlLiquid = 0;
+        ch = 0;
+        ch = uart3_getchar();
+        if (ch == 'a'){ // wait for start byte
+            mlLiquid = 0;
+            while (!done){ // add liquid until end 'z' signal // grabs byte
+                    ch = uart3_getchar();
+                    switch(ch){
+                             case 'b':
+                                 mlLiquid += .05; // .05 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'c':
+                                 mlLiquid += .1; // .1 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'd':
+                                 mlLiquid += .5; // .5 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'e':
+                                 mlLiquid += 1; // 1 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'f':
+                                 mlLiquid += 5; // 5 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'g':
+                                 mlLiquid += 10; // 10 mL increment
+                                 u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                                 break;
+                             case 'z': // End signal
+                                 done = true;
+                                 break;
+                             default: break; // discards all other chars
+                    }
             }
-            else{
-                switch(ch){
-                         case 'b':
-                             mlLiquid += .05; // .05 mL increment
-                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
-                             break;
-                         case 'c':
-                             mlLiquid += .1; // .1 mL increment
-                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
-                             break;
-                         case 'd':
-                             mlLiquid += .5; // .5 mL increment
-                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
-                             break;
-                         case 'e':
-                             mlLiquid += 1; // 1 mL increment
-                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
-                             break;
-                         case 'f':
-                             mlLiquid += 5; // 5 mL increment
-                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
-                             break;
-                         case 'g':
-                             mlLiquid += 10; // 10 mL increment
-                             u0_dbg_printf("%i steps\n", steps);
-                             break;
-                         default: break;
-                }
-            }
+            steps = mlLiquid * stepsPerML; //Translate liquid to steps here
+            xQueueSend(startStep, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+            done = false;
         }
-
-        steps = mlLiquid * ustepsPerML; //Translate liquid to steps here
-
-        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+        else { //ignoreChar
+            ignoreChar = uart3_getchar();
+        }
         return true;
     }
     private:
