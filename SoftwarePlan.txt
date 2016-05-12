@@ -1,0 +1,41 @@
+
+
+
+1. Application will take input of 0mL to 30mL (.05mL increments only for now , make it precise up to .01 or less later?)
+2. Application converts liquid input into appropriate numbers of chars sent ('a' start byte, 'z' end byte)
+  ex) 20.35mL
+      program will send 'a','g','g','c','c','c','b','z' = start+10+10+.1+.1+.1+.05+stop
+                         case 'b':
+                             mlLiquid += .05; // .05 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'c':
+                             mlLiquid += .1; // .1 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'd':
+                             mlLiquid += .5; // .5 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'e':
+                             mlLiquid += 1; // 1 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'f':
+                             mlLiquid += 5; // 5 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'g':
+                             mlLiquid += 10; // 10 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+3.App locks after these bytes are done sending with a popup message ("Please wait while task completes") 
+4. App locks until 'y' is sent representing "Task done" signal
+5. On the other side, board will wait for uart data starting with 'a'
+5a. Enters loop and adds up char to mL until 'z' (done) signal sent
+6. convert stepsperML * mL to obtain steps
+7. send steps to que
+8. stepper task receives amount of steps and executes
+8a. (track amount of liquid left ? in case they awnt to dispense 5ml, then 5ml in another instruction?)
+9. sends uart char 'y' (represent done) to bluetooth app to allow a new input
+                             
