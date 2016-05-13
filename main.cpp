@@ -48,7 +48,7 @@ class StepperMotor : public scheduler_task
         //Direction switch initi
         LPC_PINCON->PINSEL2 &= ~((1<<18)|(1<<19)); // Set SW1.9
         LPC_GPIO1->FIODIR &= ~(1 << 9); // make input sw 0
-        LPC_PINCON->PINSEL2 &= ~((1<<0)|(1<<0)); // Set LED 1.0
+        LPC_PINCON->PINSEL2 &= ~((1<<0)|(1<<1)); // Set LED 1.0
         LPC_GPIO1->FIODIR |= (1 << 0); // make output led 1.0
 
         /* Set p2.0 - p2.7 to outputs (1) */
@@ -109,7 +109,7 @@ class StepperMotor : public scheduler_task
             }
 
             //LED Lights Up After Done
-            LPC_GPIO1->FIOCLR = (1 << 4 ); // LED On
+            LPC_GPIO1->FIOCLR = (1 << 0 ); // LED 1.0 "Done" On
             while(1){
                 //Wait for user to be ready to rewind
                 if (LPC_GPIO1->FIOPIN & (1 << 9)){ //Will start when button pressed;
@@ -126,6 +126,7 @@ class StepperMotor : public scheduler_task
               LPC_GPIO2->FIOCLR = (1<<4); //2.4 low
               vTaskDelay(1); //delay
             }
+            LPC_GPIO1->FIOSET = (1 << 0 ); // LED 1.0 Off
             LPC_GPIO2->FIOCLR = (1<<0); // Set direction back to outward for next use;
 
         }
