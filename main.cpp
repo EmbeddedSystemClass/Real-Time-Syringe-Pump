@@ -42,12 +42,12 @@ class StepperMotor : public scheduler_task
     {
         // Set Pins p2.0 - p2.7 To 00 for GPIO Function
         // Can also just do LPC_PINCON->PINSEL4 &= ~FF;
-        LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 Dir
-        LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 Step
-        LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2 ms1
-        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 ms2
-        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 ms3
-        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 en
+        LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 En
+        LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 ms1
+        LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2 ms2
+        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 ms3
+        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 step
+        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 dir
 
         /* Set p2.0 - p2.7 to outputs (1) */
         // Can also just do LPC_GPIO2->FIODIR |= FF; Here (same thing) i believe;
@@ -58,11 +58,12 @@ class StepperMotor : public scheduler_task
         LPC_GPIO2->FIODIR |= (1 << 4);
         LPC_GPIO2->FIODIR |= (1 << 5);
 
-        LPC_GPIO2->FIOCLR = (1<<0); // 2.0 Dir starts low goes outward
-        LPC_GPIO2->FIOCLR = (1<<2); // 2.2 ms1 low
-        LPC_GPIO2->FIOCLR = (1<<3); // 2.3 ms2 low
-        LPC_GPIO2->FIOCLR = (1<<4); // 2.4 ms3 low
-        LPC_GPIO2->FIOCLR = (1<<5); // 2.5 enable low - allows motor control
+        LPC_GPIO2->FIOCLR = (1<<0); // 2.0 en
+        LPC_GPIO2->FIOCLR = (1<<1); // 2.0 ms1 low
+        LPC_GPIO2->FIOCLR = (1<<2); // 2.2 ms2 low
+        LPC_GPIO2->FIOCLR = (1<<3); // 2.3 ms3 low
+        LPC_GPIO2->FIOCLR = (1<<4); // 2.4 step
+        LPC_GPIO2->FIOCLR = (1<<5); // 2.5 dir
 
         return true;
     }
@@ -77,6 +78,7 @@ class StepperMotor : public scheduler_task
     bool run(void *p)
     {
         int steps = 0;
+        static double amount = 0;
 
         if (xQueueReceive(startStep,&steps,portMAX_DELAY))
         {
@@ -85,9 +87,9 @@ class StepperMotor : public scheduler_task
             for(int b = 0; b < steps;b++) // Dispense liquid w/ # steps
             {
             //Motor does 1 step every low to high transition
-            LPC_GPIO2->FIOSET = (1<<1); //2.1 high
+            LPC_GPIO2->FIOSET = (1<<4); //2.4 high
             vTaskDelay(1); //delay
-            LPC_GPIO2->FIOCLR = (1<<1); //2.1 low
+            LPC_GPIO2->FIOCLR = (1<<4); //2.4 low
             vTaskDelay(1); //delay
             }
 
