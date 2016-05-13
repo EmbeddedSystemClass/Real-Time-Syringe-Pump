@@ -22,8 +22,8 @@
 //How many steps it takes to dispense one mL
 long stepsPerML = (USTEPS_PER_STEP * STEPS_PER_REV * SYRINGE_BARREL_LEN_MM) / (SYRINGE_VOL_ML * T_ROD_PITCH_MM );
 
-//4266.66666667 steps per mL
-
+//426.666666667 steps per mL
+//tested about 12,800 steps for 30ml
 
 //Queue to start stepper motor task
 QueueHandle_t startStep = 0;
