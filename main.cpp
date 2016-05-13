@@ -1,15 +1,11 @@
-#include <stdio.h>
-#include "LPC17xx.h"
 #include "tasks.hpp"
 #include "examples/examples.hpp"
 #include "printf_lib.h"
-//these are for I2C lab
-#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
+#include "lpc17xx.h"
+#include <iostream>
 #include "io.hpp"
-#include "event_groups.h"
-#include "command_handler.hpp"
+
 
 //Calculate how many steps per ml of liquid
 #define SYRINGE_VOL_ML 30.0 // How much liquid our syringe holds in ML
@@ -20,7 +16,7 @@
 #define USTEPS_PER_STEP 16.0 // 16 microsteps = 1 step
 
 //How many steps it takes to dispense one mL
-long stepsPerML = (USTEPS_PER_STEP * STEPS_PER_REV * SYRINGE_BARREL_LEN_MM) / (SYRINGE_VOL_ML * T_ROD_PITCH_MM );
+long stepsPerML = (USTEPS_PER_STEP * STEPS_PER_REV * SYRINGE_BARREL_LEN_MM) / (SYRINGE_VOL_ML * T_ROD_PITCH_MM * 10);
 
 //426.666666667 steps per mL
 //tested about 12,800 steps for 30ml
@@ -34,7 +30,7 @@ QueueHandle_t startStep = 0;
 class StepperMotor : public scheduler_task
 {
     public:
-    StepperMotor (uint8_t priority) : scheduler_task("StepperMotor", 2048, priority)
+    StepperMotor (uint8_t priority) : scheduler_task("stepperTask", 2048, priority)
     {
               /* Nothing to init */
     }
@@ -48,6 +44,12 @@ class StepperMotor : public scheduler_task
         LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 ms3
         LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 step
         LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 dir
+
+        //Direction switch initi
+        LPC_PINCON->PINSEL2 &= ~((1<<18)|(1<<19)); // Set SW1.9
+        LPC_GPIO1->FIODIR &= ~(1 << 9); // make input sw 0
+        LPC_PINCON->PINSEL2 &= ~((1<<0)|(1<<0)); // Set LED 1.0
+        LPC_GPIO1->FIODIR |= (1 << 0); // make output led 1.0
 
         /* Set p2.0 - p2.7 to outputs (1) */
         // Can also just do LPC_GPIO2->FIODIR |= FF; Here (same thing) i believe;
@@ -63,8 +65,9 @@ class StepperMotor : public scheduler_task
         LPC_GPIO2->FIOCLR = (1<<2); // 2.2 ms2 low
         LPC_GPIO2->FIOCLR = (1<<3); // 2.3 ms3 low
         LPC_GPIO2->FIOCLR = (1<<4); // 2.4 step
-        LPC_GPIO2->FIOCLR = (1<<5); // 2.5 dir
-
+        LPC_GPIO2->FIOSET = (1<<5); // 2.5 dir initialized as forward
+        LD.setLeftDigit('0');
+        LD.setRightDigit('1');
         return true;
     }
 
@@ -78,10 +81,22 @@ class StepperMotor : public scheduler_task
     bool run(void *p)
     {
         int steps = 0;
-        static double amount = 0;
+        static double dispensed = 0;
 
         if (xQueueReceive(startStep,&steps,portMAX_DELAY))
         {
+            if (steps > 13000){//this should never happen anyways
+                u0_dbg_printf("Too many steps! Exiting!\n");
+                return true;
+            }
+            LD.setLeftDigit('0');
+            if (LPC_GPIO2->FIOPIN & (1 << 5)){ // if Pin is high = forward = 1 on right LED
+                LD.setRightDigit('1');
+            }
+            else{ // else pin is low and reverse direction = 0 on LED
+            LD.setRightDigit('0');
+            }
+
             u0_dbg_printf("We have %i steps from the queue receive\n", steps);
 
             for(int b = 0; b < steps;b++) // Dispense liquid w/ # steps
@@ -93,16 +108,26 @@ class StepperMotor : public scheduler_task
             vTaskDelay(1); //delay
             }
 
+            //LED Lights Up After Done
+            LPC_GPIO1->FIOCLR = (1 << 4 ); // LED On
+            while(1){
+                //Wait for user to be ready to rewind
+                if (LPC_GPIO1->FIOPIN & (1 << 9)){ //Will start when button pressed;
+                    break;
+                }
+            }
+
             LPC_GPIO2->FIOSET = (1<<0); // Reverse direction to return to starting position
             for(int b = 0; b < steps;b++)
             {
               //Motor does 1 step every low to high transition
-              LPC_GPIO2->FIOSET = (1<<1); //2.1 high
+              LPC_GPIO2->FIOSET = (1<<4); //2.4 high
               vTaskDelay(1); //delay
-              LPC_GPIO2->FIOCLR = (1<<1); //2.1 low
+              LPC_GPIO2->FIOCLR = (1<<4); //2.4 low
               vTaskDelay(1); //delay
             }
             LPC_GPIO2->FIOCLR = (1<<0); // Set direction back to outward for next use;
+
         }
         u0_dbg_printf("Done\n");
 
@@ -120,7 +145,7 @@ class StepperMotor : public scheduler_task
 class BluetoothTask : public scheduler_task
 {
     public:
-      BluetoothTask (uint8_t priority) : scheduler_task("watchdog", 2048, priority)
+      BluetoothTask (uint8_t priority) : scheduler_task("btTask", 2048, priority)
     {
               /* Nothing to init */
     }
