@@ -24,6 +24,7 @@ long stepsPerML = (USTEPS_PER_STEP * STEPS_PER_REV * SYRINGE_BARREL_LEN_MM) / (S
 
 //426.666666667 steps per mL
 //tested about 12,800 steps for 30ml
+//13,500 steps for 30ml in reverse
 
 //Queue to start stepper motor task
 QueueHandle_t startStep = 0;
