@@ -7,39 +7,76 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="aj.syringepump.Menu">
+    tools:context="aj.syringepump.Menu"
+    >
 
-    <Button
+    <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1"
-        android:id="@+id/sendButton_1"
-        android:layout_alignWithParentIfMissing="false"
+        android:inputType="numberDecimal"
+        android:ems="10"
+        android:id="@+id/dispenseInput"
+        android:hint="Enter the amount here"
+        android:textAlignment="center"
         android:layout_centerVertical="true"
-        android:layout_alignStart="@+id/sendButton_1000" />
+        android:layout_centerHorizontal="true"
+        android:fontFamily="serif"
+        />
 
-    <Button
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="10"
-        android:id="@+id/sendButton_10"
-        android:layout_below="@+id/sendButton_1"
-        android:layout_centerHorizontal="true" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/header"
+        android:text="@string/header"
+        android:fontFamily="serif"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/appTitle"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp" />
 
     <Button
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:text="@string/dispenseButton"
+        android:id="@+id/dispenseButton"
+        android:layout_below="@+id/dispenseInput"
+        android:layout_centerHorizontal="true"
+        android:fontFamily="serif"
+        android:shadowRadius="5"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:layout_margin="10dp"
+        android:textColor="#000000" />
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="100"
-        android:id="@+id/sendButton_100"
-        android:layout_below="@+id/sendButton_10"
-        android:layout_alignStart="@+id/sendButton_10" />
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/appTitle"
+        android:id="@+id/appTitle"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold"
+        android:fontFamily="serif" />
 
     <Button
+        style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1000"
-        android:id="@+id/sendButton_1000"
-        android:layout_below="@+id/sendButton_100"
-        android:layout_centerHorizontal="true" />
+        android:text="&lt;-"
+        android:id="@+id/leftBtn"
+        android:layout_below="@+id/dispenseButton"
+        android:layout_alignStart="@+id/dispenseInput" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="->"
+        android:id="@+id/rightBtn"
+        android:layout_below="@+id/dispenseButton"
+        android:layout_alignEnd="@+id/dispenseInput" />
 
 </RelativeLayout>
