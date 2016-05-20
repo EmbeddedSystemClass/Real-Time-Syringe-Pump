@@ -1,46 +1,3 @@
-/*
- /*
- *     SocialLedge.com - Copyright (C) 2013
- *
- *     This file is part of free software framework for embedded processors.
- *     You can use it and/or distribute it as long as this copyright header
- *     remains unmodified.  The code is free for personal use and requires
- *     permission to use in a commercial product.
- *
- *      THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
- *      OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
- *      MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
- *      I SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
- *      CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
- *     You can reach the author of this software at :
- *          p r e e t . w i k i @ g m a i l . c o m
- */
-/*
- *     SocialLedge.com - Copyright (C) 2013
- *
- *     This file is part of free software framework for embedded processors.
- *     You can use it and/or distribute it as long as this copyright header
- *     remains unmodified.  The code is free for personal use and requires
- *     permission to use in a commercial product.
- *
- *      THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
- *      OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
- *      MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
- *      I SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
- *      CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
- *     You can reach the author of this software at :
- *          p r e e t . w i k i @ g m a i l . c o m
- */
-
-/**
- * @file
- * @brief This is the application entry point.
- *          FreeRTOS and stdio printf is pre-configured to use uart0_min.h before main() enters.
- *          @see L0_LowLevel/lpc_sys.h if you wish to override printf/scanf functions.
- *
- */
 #include <stdio.h>
 #include "LPC17xx.h"
 #include "tasks.hpp"
@@ -72,9 +29,9 @@ class StepperMotor : public scheduler_task
         LPC_PINCON->PINSEL4 &= ~((1<<0)|(1<<1)); // 2.0 en
         LPC_PINCON->PINSEL4 &= ~((1<<2)|(1<<3)); // 2.1 S1
         LPC_PINCON->PINSEL4 &= ~((1<<4)|(1<<5)); // 2.2 s2
-		LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 s3
-		LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 stp
-		LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 dir
+        LPC_PINCON->PINSEL4 &= ~((1<<6)|(1<<7)); // 2.3 s3
+        LPC_PINCON->PINSEL4 &= ~((1<<8)|(1<<9)); // 2.4 stp
+        LPC_PINCON->PINSEL4 &= ~((1<<10)|(1<<11)); // 2.5 dir
 
         /* Set p2.0 - p2.7 to outputs (1) */
         // Can also just do LPC_GPIO2->FIODIR |= FF; Here (same thing) i believe;
@@ -83,14 +40,14 @@ class StepperMotor : public scheduler_task
         LPC_GPIO2->FIODIR |= (1 << 2);
         LPC_GPIO2->FIODIR |= (1 << 3);
         LPC_GPIO2->FIODIR |= (1 << 4);
-		LPC_GPIO2->FIODIR |= (1 << 5);
+        LPC_GPIO2->FIODIR |= (1 << 5);
 
-		LPC_GPIO2->FIOCLR = (1<<0);
-		LPC_GPIO2->FIOCLR = (1<<1);
-		LPC_GPIO2->FIOCLR = (1<<2);
-		LPC_GPIO2->FIOCLR = (1<<3);
-		LPC_GPIO2->FIOCLR = (1<<4);
-		LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
+        LPC_GPIO2->FIOCLR = (1<<0);
+        LPC_GPIO2->FIOCLR = (1<<1);
+        LPC_GPIO2->FIOCLR = (1<<2);
+        LPC_GPIO2->FIOCLR = (1<<3);
+        LPC_GPIO2->FIOCLR = (1<<4);
+        LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
 
 
         return true;
@@ -102,21 +59,21 @@ class StepperMotor : public scheduler_task
         if (xQueueReceive(qh,&steps,portMAX_DELAY))
         {
 
-			u0_dbg_printf("We have %i steps from the queue receive\n", steps);
+            u0_dbg_printf("We have %i steps from the queue receive\n", steps);
 
-			//set 2.0 high
+            //set 2.0 high
 
-			for(int b = 0; b < steps;b++)
-			{
-			//2.1 high
-			LPC_GPIO2->FIOSET = (1<<4);
-			vTaskDelay(1);
-			LPC_GPIO2->FIOCLR = (1<<4);
-			vTaskDelay(1);
-			//delay
-			//2.1 low
-			//delay
-			}
+            for(int b = 0; b < steps;b++)
+            {
+            //2.1 high
+            LPC_GPIO2->FIOSET = (1<<4);
+            vTaskDelay(1);
+            LPC_GPIO2->FIOCLR = (1<<4);
+            vTaskDelay(1);
+            //delay
+            //2.1 low
+            //delay
+            }
         }
         u0_dbg_printf("Done\n");
         //vTaskDelay(5000);
@@ -142,24 +99,24 @@ class BluetoothTask : public scheduler_task
     bool init(void)
     {
         LPC_SC->PCONP |= (1 << 25); // Power Enable UART3
-		LPC_SC->PCLKSEL1 &= -(3 << 18);
+        LPC_SC->PCLKSEL1 &= -(3 << 18);
 
-		BIT(LPC_SC->PCLKSEL1).b19_18 = 1; // Peripheral Clock
-		BIT(LPC_UART3->LCR).b7 = 1; // Enable DLAB
+        BIT(LPC_SC->PCLKSEL1).b19_18 = 1; // Peripheral Clock
+        BIT(LPC_UART3->LCR).b7 = 1; // Enable DLAB
 
-		uint16_t DL = sys_get_cpu_clock()/(9600 * 16);
-		LPC_UART3->DLM = DL >> 8;
-		LPC_UART3->DLL = DL;
+        uint16_t DL = sys_get_cpu_clock()/(9600 * 16);
+        LPC_UART3->DLM = DL >> 8;
+        LPC_UART3->DLL = DL;
 
-		LPC_PINCON->PINSEL0 &= -(3 << 0);
-		LPC_PINCON->PINSEL0 &= -(3 << 2);
+        LPC_PINCON->PINSEL0 &= -(3 << 0);
+        LPC_PINCON->PINSEL0 &= -(3 << 2);
 
-		BIT(LPC_PINCON->PINSEL0).b1_0 = 2; // TXD3 P0.0
-		BIT(LPC_PINCON->PINSEL0).b3_2 = 2; // RXD3 P0.1
+        BIT(LPC_PINCON->PINSEL0).b1_0 = 2; // TXD3 P0.0
+        BIT(LPC_PINCON->PINSEL0).b3_2 = 2; // RXD3 P0.1
 
-		LPC_UART3->LCR = 3; //8-bit data
+        LPC_UART3->LCR = 3; //8-bit data
 
-		BIT(LPC_UART3->LCR).b7 = 0; // Disable DLAB
+        BIT(LPC_UART3->LCR).b7 = 0; // Disable DLAB
 
         qh = xQueueCreate( 1 , sizeof(int)); // Creates Queue of Size 1
 
@@ -167,10 +124,10 @@ class BluetoothTask : public scheduler_task
     }
 
     char uart3_getchar(void){
-		while(!(LPC_UART3->LSR & (1 << 0))); // wait for FIFO to not be empty
-		char c = LPC_UART3->RBR;
-		return c;
-	}
+        while(!(LPC_UART3->LSR & (1 << 0))); // wait for FIFO to not be empty
+        char c = LPC_UART3->RBR;
+        return c;
+    }
 
     char uart3_putchar(char out)
     {
@@ -184,59 +141,89 @@ class BluetoothTask : public scheduler_task
 
         int steps;
         steps = 0;
-		char ch = uart3_getchar();
-		u0_dbg_printf("%c\n", ch);
-		if (ch == 'x'){
-			while (1){
-				ch = uart3_getchar();
-				switch(ch){
-					case 'a':
-						steps += 1;
-						u0_dbg_printf("%i a steps\n", steps);
-						stepsReceived++;
-						break;
-					case 'b':
-						steps += 10;
-						u0_dbg_printf("%i b steps\n", steps);
-						stepsReceived+=steps;
-						break;
-					case 'c':
-						steps += 100;
-						u0_dbg_printf("%i c steps\n", steps);
-						stepsReceived = stepsReceived+100;
-						break;
-					case 'd':
-						steps += 1000;
-						u0_dbg_printf("%i d steps\n", steps);
-						stepsReceived = stepsReceived+1000;
-						break;
-					case 'y':
-						u0_dbg_printf("Total Steps Received = %i\n", stepsReceived);
-						xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
-						return true;
-					default: u0_dbg_printf("Not suppose to happen\n");
-							break;
-				}
-			}
+        char ch = uart3_getchar();
+        u0_dbg_printf("%c\n", ch);
 
-		//u0_dbg_printf("Steps Received = %i\n", stepsReceived);
+        if (ch == 'o'){
+            LPC_GPIO2->FIOCLR = (1<<5);
+            u0_dbg_printf("Session Done\n");
+            xQueueSend(qh,&stepsReceived, portMAX_DELAY);
+            stepsReceived = 0;
+            return true;
+        }
+
+        else if (ch == 'x'){
+            while (1){
+                ch = uart3_getchar();
+                switch(ch){
+                    case 'a':
+                        steps += 1;
+                        u0_dbg_printf("%i a steps\n", steps);
+                        if (LPC_GPIO2->FIOPIN & (1 << 5) ) // pin is high = out
+                            stepsReceived++;
+                        else {
+                            stepsReceived--;
+                        }
+                        break;
+                    case 'b':
+                        steps += 10;
+                        u0_dbg_printf("%i b steps\n", steps);
+                        if (LPC_GPIO2->FIOPIN & (1 << 5) ) // pin is high = out
+                           stepsReceived+=10;
+                        else {
+                           stepsReceived-=10;
+                        }
+                        break;
+                    case 'c':
+                        steps += 100;
+                        u0_dbg_printf("%i c steps\n", steps);
+                        if (LPC_GPIO2->FIOPIN & (1 << 5) ) // pin is high = out
+                           stepsReceived+=100;
+                        else {
+                           stepsReceived-=100;
+                        }
+                        break;
+                    case 'd':
+                        steps += 1000;
+                        u0_dbg_printf("%i d steps\n", steps);
+                        if (LPC_GPIO2->FIOPIN & (1 << 5) ) // pin is high = out
+                           stepsReceived+=1000;
+                        else {
+                           stepsReceived-=1000;
+                        }
+                        break;
+                    case 'y':
+                        if (stepsReceived > 13000 || stepsReceived < 0){
+                            uart3_putchar('n');
+                            u0_dbg_printf("Out of bounds\n");
+                            return true;
+                        }
+                        u0_dbg_printf("Total Steps Received = %i\n", stepsReceived);
+                        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+                        return true;
+                    default: u0_dbg_printf("Not suppose to happen\n");
+                            break;
+                }
+            }
+
+        //u0_dbg_printf("Steps Received = %i\n", stepsReceived);
         //xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
         return true;
-		}
+        }
 
-		else if(ch == 'e' || ch == 'f')
-		{
-			if(ch == 'e')
-			{
-				LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
-				u0_dbg_printf("Direction inward\n");
-			}
-			else
-			{
-				LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
-				u0_dbg_printf("Direction outward\n");
-			}
-		}
+        else if(ch == 'e' || ch == 'f')
+        {
+            if(ch == 'e')
+            {
+                LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
+                u0_dbg_printf("Direction inward\n");
+            }
+            else
+            {
+                LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
+                u0_dbg_printf("Direction outward\n");
+            }
+        }
 
         //decode message = how many steps on motor
         //send amount of steps to motor 0 256 steps
