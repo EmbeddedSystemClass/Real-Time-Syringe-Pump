@@ -8,4 +8,4 @@ Here is a software flow using main.cpp and bluetooth application folder code.
 
 
 A document for our project : 
-http://www.socialledge.com/sjsu/index.php?title=S16:_Dan#Parts_List_.26_Cost
+http://www.socialledge.com/sjsu/index.php?title=S16:_Dan
