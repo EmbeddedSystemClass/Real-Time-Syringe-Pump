@@ -56,6 +56,7 @@
 
 
 QueueHandle_t qh = 0;
+int stepsReceived = 0;
 
 class StepperMotor : public scheduler_task
 {
@@ -182,37 +183,60 @@ class BluetoothTask : public scheduler_task
     {
 
         int steps;
+        steps = 0;
 		char ch = uart3_getchar();
-		//u0_dbg_printf("%c\n", ch);
-		switch(ch){
-			case 'a':
-				steps = 1;
-				u0_dbg_printf("%i steps\n", steps);
-				break;
-			case 'b':
-				steps = 10;
-				u0_dbg_printf("%i steps\n", steps);
-				break;
-			case 'c':
-				steps = 100;
-				u0_dbg_printf("%i steps\n", steps);
-				break;
-			case 'd':
-				steps = 1000;
-				u0_dbg_printf("%i steps\n", steps);
-				break;
-			case 'e':
-				LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
-				u0_dbg_printf("Direction inward\n");
-				break;
-			case 'f':
-				LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
-				u0_dbg_printf("Direction outward\n");
-				break;
-			default: break;
+		u0_dbg_printf("%c\n", ch);
+		if (ch == 'x'){
+			while (1){
+				ch = uart3_getchar();
+				switch(ch){
+					case 'a':
+						steps += 1;
+						u0_dbg_printf("%i a steps\n", steps);
+						stepsReceived++;
+						break;
+					case 'b':
+						steps += 10;
+						u0_dbg_printf("%i b steps\n", steps);
+						stepsReceived+=steps;
+						break;
+					case 'c':
+						steps += 100;
+						u0_dbg_printf("%i c steps\n", steps);
+						stepsReceived = stepsReceived+100;
+						break;
+					case 'd':
+						steps += 1000;
+						u0_dbg_printf("%i d steps\n", steps);
+						stepsReceived = stepsReceived+1000;
+						break;
+					case 'y':
+						u0_dbg_printf("Total Steps Received = %i\n", stepsReceived);
+						xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+						return true;
+					default: u0_dbg_printf("Not suppose to happen\n");
+							break;
+				}
+			}
+
+		//u0_dbg_printf("Steps Received = %i\n", stepsReceived);
+        //xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+        return true;
 		}
 
-        xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
+		else if(ch == 'e' || ch == 'f')
+		{
+			if(ch == 'e')
+			{
+				LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
+				u0_dbg_printf("Direction inward\n");
+			}
+			else
+			{
+				LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
+				u0_dbg_printf("Direction outward\n");
+			}
+		}
 
         //decode message = how many steps on motor
         //send amount of steps to motor 0 256 steps
