@@ -1,8 +1,8 @@
 package aj.syringepump;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,9 +23,10 @@ public class Menu extends AppCompatActivity{
 
     double num;
     double numOfSteps;
-    boolean dis;
+    double totalNum = 0;
 
-    Handler handler = new Handler();
+    boolean dis;
+    boolean dir;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +56,7 @@ public class Menu extends AppCompatActivity{
             public void onClick(View v) {
                 dispense.setEnabled(true);
                 status.setText("active");
+                dir = true;
             }
         });
 
@@ -66,6 +68,8 @@ public class Menu extends AppCompatActivity{
                 BluetoothConnection.myThreadConnected.write(sendoByte);
                 dispense.setEnabled(false);
                 status.setText("inactive");
+                totalNum = 0;
+                numOfml.setText(Double.toString(totalNum));
             }
         });
 
@@ -76,6 +80,7 @@ public class Menu extends AppCompatActivity{
                 byte[] send1Byte = "e".getBytes();
                 BluetoothConnection.myThreadConnected.write(send1Byte);
                 direction.setText("inward");
+                dir = false;
             }
         });
 
@@ -86,6 +91,7 @@ public class Menu extends AppCompatActivity{
                 byte[] send1Byte = "f".getBytes();
                 BluetoothConnection.myThreadConnected.write(send1Byte);
                 direction.setText("outward");
+                dir = true;
             }
         });
 
@@ -105,6 +111,15 @@ public class Menu extends AppCompatActivity{
                     else
                     {
                         dis = true;
+                        if(dir)
+                        {
+                            totalNum-=num;
+                            numOfml.setText(Double.toString(totalNum));
+                        }
+                        else {
+                            totalNum += num;
+                            numOfml.setText(Double.toString(totalNum));
+                        }
                         byte[] sendxByte = "x".getBytes();
                         BluetoothConnection.myThreadConnected.write(sendxByte);
                     }
@@ -122,29 +137,25 @@ public class Menu extends AppCompatActivity{
                             byte[] send1Byte = "a".getBytes();
                             BluetoothConnection.myThreadConnected.write(send1Byte);
                             numOfSteps = numOfSteps - 1;
-                            Toast toast = Toast.makeText(getApplicationContext(), "# of Steps: " + numOfSteps, Toast.LENGTH_LONG);
-                            toast.show();
+                            Log.v("Tag", "# of Steps: " + numOfSteps);
                         }
                         else if (numOfSteps > 9 && numOfSteps < 100) {
                             byte[] send10Byte = "b".getBytes();
                             BluetoothConnection.myThreadConnected.write(send10Byte);
                             numOfSteps = numOfSteps - 10;
-                            Toast toast = Toast.makeText(getApplicationContext(), "# of Steps: " + numOfSteps, Toast.LENGTH_LONG);
-                            toast.show();
+                            Log.v("Tag", "# of Steps: " + numOfSteps);
                         }
                         else if (numOfSteps > 99 && numOfSteps < 1000) {
                             byte[] send100Byte = "c".getBytes();
                             BluetoothConnection.myThreadConnected.write(send100Byte);
                             numOfSteps = numOfSteps - 100;
-                            Toast toast = Toast.makeText(getApplicationContext(), "# of Steps: " + numOfSteps, Toast.LENGTH_LONG);
-                            toast.show();
+                            Log.v("Tag", "# of Steps: " + numOfSteps);
                         }
                         else if (numOfSteps > 999) {
                             byte[] send1000Byte = "d".getBytes();
                             BluetoothConnection.myThreadConnected.write(send1000Byte);
                             numOfSteps = numOfSteps - 1000;
-                            Toast toast = Toast.makeText(getApplicationContext(), "# of Steps: " + numOfSteps, Toast.LENGTH_LONG);
-                            toast.show();
+                            Log.v("Tag", "# of Steps: " + numOfSteps);
                         }
                     }
                     byte[] sendyByte = "y".getBytes();

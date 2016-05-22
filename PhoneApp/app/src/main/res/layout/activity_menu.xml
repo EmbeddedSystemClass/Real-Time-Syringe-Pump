@@ -128,8 +128,18 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/numOfml"
         android:hint="# of ml"
-        android:layout_below="@+id/direction"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp" />
+        android:layout_marginLeft="10dp"
+        android:layout_centerVertical="true"
+        android:layout_alignEnd="@+id/activeText"
+        android:layout_marginRight="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="ml"
+        android:id="@+id/mlLabel"
+        android:layout_alignTop="@+id/numOfml"
+        android:layout_toEndOf="@+id/direction" />
 
 </RelativeLayout>
