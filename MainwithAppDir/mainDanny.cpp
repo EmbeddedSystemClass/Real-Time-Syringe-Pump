@@ -78,7 +78,7 @@ class StepperMotor : public scheduler_task
 class BluetoothTask : public scheduler_task
 {
     public:
-      BluetoothTask (uint8_t priority) : scheduler_task("blueTooth", 2048, priority)
+      BluetoothTask (uint8_t priority) : scheduler_task("blueTooth", 3048, priority)
     {
               /* Nothing to init */
     }
@@ -132,8 +132,6 @@ class BluetoothTask : public scheduler_task
         int steps;
         steps = 0;
         char ch = uart3_getchar();
-        char charBuffer[1000] = {0};
-        printf("GotChar1: %c\n", ch);
 
         if (ch == 'o'){ // Session Done
             LPC_GPIO2->FIOCLR = (1<<5); // Sets Pin To Reverse
@@ -146,11 +144,9 @@ class BluetoothTask : public scheduler_task
         else if (ch == 'x'){
             while (1){
                 ch = uart3_getchar();
-                printf("GotChar2:%c and StepsReceived:%i\n",ch,stepsReceived);
                 switch(ch){
                     case 'a':
                         steps += 1;
-                        printf("%i a steps\n", steps);
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+1 > 12990){
                             printf("Out of bounds\n");
@@ -168,10 +164,8 @@ class BluetoothTask : public scheduler_task
                         break;
                     case 'b':
                         steps += 10;
-                        printf("%i b steps\n", steps);
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+10> 12990){
-                            printf("Out of bounds\n");
                             return true;
                             }
                             stepsReceived+=10;
@@ -186,7 +180,6 @@ class BluetoothTask : public scheduler_task
                         break;
                     case 'c':
                         steps += 100;
-                        printf("%i c steps\n", steps);
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+100 > 12990){
                             printf("Out of bounds\n");
@@ -204,7 +197,6 @@ class BluetoothTask : public scheduler_task
                         break;
                     case 'd':
                         steps += 1000;
-                        printf("%i d steps\n", steps);
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+1000 > 12990){
                             printf("Out of bounds\n");
@@ -221,19 +213,14 @@ class BluetoothTask : public scheduler_task
                         }
                         break;
                     case 'y':
-                        printf("Y: Total Steps Received = %i\n", stepsReceived);
-                        printf("Sending %i steps\n",steps);
+                        printf("SR:%i & S:%i\n", stepsReceived,steps);
                         xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
                         return true;
                     default:
-                            printf("%c: Not suppose to happen\n",ch);
+                            printf("BL:%c\n",ch);
                             break;
                 }
             }
-
-        //u0_dbg_printf("Steps Received = %i\n", stepsReceived);
-        //xQueueSend(qh, &steps, portMAX_DELAY); // Sends the steps to the stepper task
-            return true;
         }
 
         else if(ch == 'e' || ch == 'f')
@@ -241,12 +228,12 @@ class BluetoothTask : public scheduler_task
             if(ch == 'e')
             {
                 LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
-                u0_dbg_printf("Direction inward\n");
+                printf("Direction inward\n");
             }
             else
             {
                 LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
-                u0_dbg_printf("Direction outward\n");
+                printf("Direction outward\n");
             }
         }
 
