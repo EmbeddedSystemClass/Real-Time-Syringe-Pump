@@ -15,10 +15,12 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/connectionLabel"
         android:id="@+id/connectionLabel"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="20dp"
-        android:fontFamily="serif" />
+        android:fontFamily="serif"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignStart="@+id/textView"
+        android:layout_margin="20dp" />
 
     <ListView
         android:layout_width="wrap_content"
@@ -28,5 +30,16 @@
         android:layout_below="@+id/connectionLabel"
         android:layout_marginBottom="30dp"
         />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/appTitle"
+        android:id="@+id/textView"
+        android:textStyle="bold"
+        android:fontFamily="serif"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

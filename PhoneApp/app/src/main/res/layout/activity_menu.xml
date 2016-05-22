@@ -18,10 +18,10 @@
         android:id="@+id/dispenseInput"
         android:hint="Enter the amount here"
         android:textAlignment="center"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
         android:fontFamily="serif"
-        />
+        android:layout_below="@+id/startButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="77dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -41,14 +41,16 @@
         android:layout_height="50dp"
         android:text="@string/dispenseButton"
         android:id="@+id/dispenseButton"
-        android:layout_below="@+id/dispenseInput"
-        android:layout_centerHorizontal="true"
         android:fontFamily="serif"
         android:shadowRadius="5"
         android:shadowDx="0"
         android:shadowDy="0"
-        android:layout_margin="10dp"
-        android:textColor="#000000" />
+        android:textColor="#000000"
+        android:background="@drawable/buttonshape"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_below="@+id/dispenseInput"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -68,7 +70,8 @@
         android:text="&lt;-"
         android:id="@+id/leftBtn"
         android:layout_below="@+id/dispenseButton"
-        android:layout_alignStart="@+id/dispenseInput" />
+        android:layout_alignStart="@+id/dispenseInput"
+        android:background="@drawable/buttonshape" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -77,6 +80,56 @@
         android:text="->"
         android:id="@+id/rightBtn"
         android:layout_below="@+id/dispenseButton"
-        android:layout_alignEnd="@+id/dispenseInput" />
+        android:layout_alignEnd="@+id/dispenseInput"
+        android:background="@drawable/buttonshape" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="@string/startSession"
+        android:id="@+id/startButton"
+        android:layout_below="@+id/header"
+        android:layout_alignParentStart="true"
+        android:checked="false"
+        android:background="@drawable/buttonshape"
+        android:fontFamily="serif" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="@string/endSession"
+        android:id="@+id/doneButton"
+        android:layout_alignBottom="@+id/startButton"
+        android:layout_alignParentEnd="true"
+        android:fontFamily="serif"
+        android:background="@drawable/buttonshape" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="inactive"
+        android:id="@+id/activeText"
+        android:layout_below="@+id/header"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="outward"
+        android:id="@+id/direction"
+        android:layout_alignBottom="@+id/doneButton"
+        android:layout_alignStart="@+id/activeText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/numOfml"
+        android:hint="# of ml"
+        android:layout_below="@+id/direction"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp" />
 
 </RelativeLayout>

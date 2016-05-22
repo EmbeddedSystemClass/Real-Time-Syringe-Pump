@@ -50,7 +50,6 @@ public class BluetoothConnection extends AppCompatActivity {
 
         if(bluetooth.isEnabled()) {
             //Enabled. Work with Bluetooth.
-
             String mydeviceaddress = bluetooth.getAddress();
             String mydevicename = bluetooth.getName();
             status = mydevicename + " :" + mydeviceaddress;
@@ -231,6 +230,8 @@ public class BluetoothConnection extends AppCompatActivity {
             mmOutStream = tmpOut;
         }
 
+        public String strReceived;
+
         public void run() {
             byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes; // bytes returned from read()
@@ -241,8 +242,8 @@ public class BluetoothConnection extends AppCompatActivity {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
                     // Send the obtained bytes to the UI activity
-                    //mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-                    //        .sendToTarget();
+                    //mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                    strReceived = new String(buffer, 0, bytes);
                 } catch (IOException e) {
                     break;
                 }
