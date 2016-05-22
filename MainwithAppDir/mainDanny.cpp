@@ -146,7 +146,7 @@ class BluetoothTask : public scheduler_task
         else if (ch == 'x'){
             while (1){
                 ch = uart3_getchar();
-                printf("GotChar2: %c\n",ch);
+                printf("GotChar2:%c and StepsReceived:%i\n",ch,stepsReceived);
                 switch(ch){
                     case 'a':
                         steps += 1;
