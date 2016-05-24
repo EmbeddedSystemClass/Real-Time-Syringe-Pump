@@ -1,8 +1,0 @@
-<resources>
-    <string name="app_name">SyringePump</string>
-    <string name="connectionLabel">Please Select the HC-06 Bluetooth Module</string>
-    <string name="header">Please Enter the Amount of Liquid to Dispense that is less than 30 ml</string>
-    <string name="dispenseButton">Dispense!</string>
-    <string name="appTitle">CMPE146: Dan SyringePump</string>
-
-</resources>

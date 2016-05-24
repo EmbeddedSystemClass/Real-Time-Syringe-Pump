@@ -1,0 +1,37 @@
+1. Application will take input of 0mL to 30mL (.05mL increments only for now , make it precise up to .01 or less later?)
+2. Application converts liquid input into appropriate numbers of chars sent ('a' start byte, 'z' end byte) 
+	ie. 20.35mLprogram will send 'a','g','g','c','c','c','b','z' = start+10+10+.1+.1+.1+.05+stop
+                         case 'b':
+                             mlLiquid += .05; // .05 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'c':
+                             mlLiquid += .1; // .1 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'd':
+                             mlLiquid += .5; // .5 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'e':
+                             mlLiquid += 1; // 1 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'f':
+                             mlLiquid += 5; // 5 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+                         case 'g':
+                             mlLiquid += 10; // 10 mL increment
+                             u0_dbg_printf("Total Liquid: %d\n", mlLiquid);
+                             break;
+3. Application locks after these bytes are done sending with a popup message ("Please wait while task completes") 
+4. The SJ one board is accepting the UART data starting with 'a' from the example in step 2.
+	a. Enters loop and adds up char to mL until 'z' (done) signal sent.
+5. Application locks until the task is done and 'y' is sent representing "Task done" signal.
+6. Converts stepsperML * mL into the equivalent number of steps the stepper motor is taking.
+7. Send number of steps to queue.
+8. Stepper task receives amount of steps and executes.
+	a. Track amount of steps taken for reversal of the mount.
+9. Send UART char 'y' (represent done) to bluetooth app to allow a new input.
+                             
