@@ -141,75 +141,113 @@ class BluetoothTask : public scheduler_task
             return true;
         }
 
+        else if(ch == 'i'){
+        	printf("Start Session\n");
+        	LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
+        }
+
+        else if(ch == 'e')
+		{
+        	LPC_GPIO2->FIOCLR = (1 << 5);
+			//LPC_GPIO2->FIOSET = (0<<5); //set dir to 1 = outward 0 = inward
+			printf("Direction inward\n");
+		}
+
+		else if(ch == 'f')
+		{
+			//LPC_GPIO2->FIOCLR = (1 << 5);
+			LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
+			printf("Direction outward\n");
+		}
+
         else if (ch == 'x'){
             while (1){
                 ch = uart3_getchar();
+                printf("%c\n", ch);
                 switch(ch){
                     case 'a':
                         steps += 1;
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+1 > 12990){
-                            printf("Out of bounds\n");
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived++;
+                            else{
+                            	stepsReceived++;
+                            }
                         }
                         else {
-                            if(stepsReceived-1 < 0){
-                            printf("Out of bounds\n");
+                            if(stepsReceived-1 <= -1){
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived--;
+                            else
+                            {
+                            	stepsReceived--;
+                            }
                         }
                         break;
                     case 'b':
                         steps += 10;
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
-                            if(stepsReceived+10> 12990){
+                            if(stepsReceived+10 > 12990){
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived+=10;
+                            else{
+                            	stepsReceived+=10;
+                            }
                         }
                         else {
-                            if(stepsReceived-10 < 0){
-                            printf("Out of bounds\n");
+                            if(stepsReceived-10 <= -1){
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived-=10;
+                            else{
+                            	stepsReceived-=10;
+                            }
                         }
                         break;
                     case 'c':
                         steps += 100;
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+100 > 12990){
-                            printf("Out of bounds\n");
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived+=100;
+                            else{
+                            	stepsReceived+=100;
+                            }
                         }
                         else {
-                            if(stepsReceived-100 < 0){
-                            printf("Out of bounds\n");
+                            if(stepsReceived-100 <= -1){
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived-=100;
+                            else{
+                            	stepsReceived-=100;
+                            }
                         }
                         break;
                     case 'd':
                         steps += 1000;
                         if (LPC_GPIO2->FIOPIN & (1 << 5) ){ // pin is high = out
                             if(stepsReceived+1000 > 12990){
-                            printf("Out of bounds\n");
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived+=1000;
+                            else{
+                            	stepsReceived+=1000;
+                            }
                         }
                         else {
-                            if(stepsReceived-1000 < 0){
-                            printf("Out of bounds\n");
+                            if(stepsReceived-1000 <= -1){
+                            	printf("Out of bounds\n");
                             return true;
                             }
-                            stepsReceived-=1000;
+                            else{
+                            	stepsReceived-=1000;
+                            }
                         }
                         break;
                     case 'y':
@@ -223,19 +261,7 @@ class BluetoothTask : public scheduler_task
             }
         }
 
-        else if(ch == 'e' || ch == 'f')
-        {
-            if(ch == 'e')
-            {
-                LPC_GPIO2->FIOCLR = (1<<5); //set dir to 1 = outward 0 = inward
-                printf("Direction inward\n");
-            }
-            else
-            {
-                LPC_GPIO2->FIOSET = (1<<5); //set dir to 1 = outward 0 = inward
-                printf("Direction outward\n");
-            }
-        }
+
 
         //decode message = how many steps on motor
         //send amount of steps to motor 0 256 steps
