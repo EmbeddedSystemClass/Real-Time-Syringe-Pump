@@ -9,6 +9,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 public class Menu extends AppCompatActivity{
 
     Button dispense;
@@ -57,6 +60,8 @@ public class Menu extends AppCompatActivity{
                 dispense.setEnabled(true);
                 status.setText("active");
                 dir = true;
+                byte[] send100Byte = "i".getBytes();
+                BluetoothConnection.myThreadConnected.write(send100Byte);
             }
         });
 
@@ -102,6 +107,9 @@ public class Menu extends AppCompatActivity{
                 if(input.length() > 0) {
                     String numString = input.getText().toString();
                     num = Float.valueOf(numString);
+                    Double temp = 0.00;
+
+                    NumberFormat formatter = new DecimalFormat("#0.00");
 
                     if(num > 30)
                     {
@@ -111,17 +119,46 @@ public class Menu extends AppCompatActivity{
                     else
                     {
                         dis = true;
-                        if(dir)
-                        {
-                            totalNum-=num;
-                            numOfml.setText(Double.toString(totalNum));
-                        }
-                        else {
-                            totalNum += num;
-                            numOfml.setText(Double.toString(totalNum));
-                        }
                         byte[] sendxByte = "x".getBytes();
                         BluetoothConnection.myThreadConnected.write(sendxByte);
+                    }
+
+                    if(dis)
+                    {
+                        if(dir)
+                        {
+                            temp = totalNum;
+                            if(temp + num > 30)
+                            {
+                                dis = false;
+                                Toast toast = Toast.makeText(getApplicationContext(), "This is not allowed!", Toast.LENGTH_LONG);
+                                toast.show();
+                            }
+                            else
+                            {
+                                totalNum+=num;
+                                numOfml.setText(formatter.format(totalNum));
+                            }
+                        }
+                        else{
+                            temp = totalNum;
+                            if(temp - num < 0)
+                            {
+                                dis = false;
+                                Toast toast = Toast.makeText(getApplicationContext(), "This is not allowed!", Toast.LENGTH_LONG);
+                                toast.show();
+                            }
+                            else {
+                                totalNum -= num;
+                                numOfml.setText(formatter.format(totalNum));
+                            }
+                        }
+                    }
+
+                    else
+                    {
+                        Toast toast = Toast.makeText(getApplicationContext(), "This is not allowed!", Toast.LENGTH_LONG);
+                        toast.show();
                     }
 
                     /* Convert input to number of steps
@@ -160,12 +197,6 @@ public class Menu extends AppCompatActivity{
                     }
                     byte[] sendyByte = "y".getBytes();
                     BluetoothConnection.myThreadConnected.write(sendyByte);
-                }
-
-                else
-                {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Invalid Input!", Toast.LENGTH_LONG);
-                    toast.show();
                 }
             }
         });
