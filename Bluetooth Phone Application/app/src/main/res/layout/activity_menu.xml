@@ -19,9 +19,9 @@
         android:hint="Enter the amount here"
         android:textAlignment="center"
         android:fontFamily="serif"
-        android:layout_below="@+id/startButton"
+        android:layout_below="@+id/doneButton"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="77dp" />
+        android:layout_marginTop="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -50,7 +50,8 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_below="@+id/dispenseInput"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignEnd="@+id/header"
+        android:layout_marginTop="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -67,42 +68,43 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="&lt;-"
+        android:text="In"
         android:id="@+id/leftBtn"
-        android:layout_below="@+id/dispenseButton"
-        android:layout_alignStart="@+id/dispenseInput"
-        android:background="@drawable/buttonshape" />
+        android:background="@drawable/buttonshape"
+        android:layout_alignBottom="@+id/dispenseButton"
+        android:layout_alignStart="@+id/doneButton" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="->"
+        android:text="Out"
         android:id="@+id/rightBtn"
-        android:layout_below="@+id/dispenseButton"
-        android:layout_alignEnd="@+id/dispenseInput"
-        android:background="@drawable/buttonshape" />
+        android:background="@drawable/buttonshape"
+        android:layout_marginLeft="10dp"
+        android:layout_alignTop="@+id/leftBtn"
+        android:layout_alignEnd="@+id/doneButton" />
 
     <Button
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="@string/startSession"
         android:id="@+id/startButton"
-        android:layout_below="@+id/header"
-        android:layout_alignParentStart="true"
         android:checked="false"
         android:background="@drawable/buttonshape"
-        android:fontFamily="serif" />
+        android:fontFamily="serif"
+        android:layout_alignTop="@+id/activeText"
+        android:layout_alignStart="@+id/header" />
 
     <Button
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="@string/endSession"
         android:id="@+id/doneButton"
-        android:layout_alignBottom="@+id/startButton"
-        android:layout_alignParentEnd="true"
         android:fontFamily="serif"
-        android:background="@drawable/buttonshape" />
+        android:background="@drawable/buttonshape"
+        android:layout_centerVertical="true"
+        android:layout_alignStart="@+id/startButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -111,7 +113,9 @@
         android:text="inactive"
         android:id="@+id/activeText"
         android:layout_below="@+id/header"
-        android:layout_centerHorizontal="true" />
+        android:layout_toEndOf="@+id/textView3"
+        android:layout_marginLeft="20dp"
+        android:fontFamily="serif" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -119,19 +123,21 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="outward"
         android:id="@+id/direction"
-        android:layout_alignBottom="@+id/doneButton"
-        android:layout_alignStart="@+id/activeText" />
+        android:layout_alignStart="@+id/activeText"
+        android:layout_alignTop="@+id/textView3"
+        android:fontFamily="serif" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/numOfml"
-        android:hint="# of ml"
+        android:hint="0.00"
         android:layout_marginLeft="10dp"
-        android:layout_centerVertical="true"
-        android:layout_alignEnd="@+id/activeText"
-        android:layout_marginRight="10dp" />
+        android:layout_marginRight="10dp"
+        android:fontFamily="serif"
+        android:layout_alignTop="@+id/doneButton"
+        android:layout_alignEnd="@+id/textView2" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -140,6 +146,29 @@
         android:text="ml"
         android:id="@+id/mlLabel"
         android:layout_alignTop="@+id/numOfml"
-        android:layout_toEndOf="@+id/direction" />
+        android:layout_alignStart="@+id/direction"
+        android:fontFamily="serif" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Status:"
+        android:id="@+id/textView2"
+        android:textStyle="bold"
+        android:fontFamily="serif"
+        android:layout_alignTop="@+id/activeText"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Direction:"
+        android:id="@+id/textView3"
+        android:layout_alignBottom="@+id/startButton"
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold"
+        android:fontFamily="serif" />
 
 </RelativeLayout>
